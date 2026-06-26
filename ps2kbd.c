@@ -26,6 +26,36 @@ static volatile uint8_t shift_state;
 static volatile uint8_t caps_state;
 static volatile uint8_t release_state;
 
+struct ps2_key_map {
+    uint8_t scan;
+    char normal;
+    char shifted;
+};
+
+static const struct ps2_key_map ps2_key_map[] = {
+    {0x15, 'q', 'Q'},
+    {0x1C, 'a', 'A'},
+    {0x1B, 's', 'S'},
+    {0x1D, 'w', 'W'},
+    {0x24, '7', '&'},
+    {0x3B, 'j', 'J'},
+    {0x2D, 'o', 'O'},
+    {0x2E, 'p', 'P'},
+    {0x26, 'l', 'L'},
+    {0x1E, '1', '!'},
+    {0x1F, '2', '@'},
+    {0x20, '3', '#'},
+    {0x21, '4', '$'},
+    {0x22, '5', '%'},
+    {0x23, '6', '^'},
+    {0x25, '8', '*'},
+    {0x26, '9', '('},
+    {0x27, '0', ')'},
+    {0x29, ' ', ' '},
+    {0x5A, '\r', '\r'},
+    {0x66, '\b', '\b'}
+};
+
 static void ps2kbd_enqueue(uint8_t value) {
     uint8_t next = (rx_head + 1) & 0x0F;
     if (next == rx_tail) {
@@ -73,72 +103,18 @@ static void ps2kbd_process_scan_code(uint8_t scan) {
         return;
     }
 
-    switch (scan) {
-        case 0x29:
-            ps2kbd_enqueue_ascii(' ');
-            break;
-        case 0x5A:
-            ps2kbd_enqueue_ascii('\r');
-            break;
-        case 0x66:
-            ps2kbd_enqueue_ascii('\b');
-            break;
-        case 0x15:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'Q' : 'q');
-            break;
-        case 0x1C:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'A' : 'a');
-            break;
-        case 0x1B:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'S' : 's');
-            break;
-        case 0x1D:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'W' : 'w');
-            break;
-        case 0x24:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'J' : 'j');
-            break;
-        case 0x2D:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'O' : 'o');
-            break;
-        case 0x2E:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'P' : 'p');
-            break;
-        case 0x26:
-            ps2kbd_enqueue_ascii(shift_state ^ caps_state ? 'L' : 'l');
-            break;
-        case 0x1E:
-            ps2kbd_enqueue_ascii(shift_state ? '!' : '1');
-            break;
-        case 0x1F:
-            ps2kbd_enqueue_ascii(shift_state ? '@' : '2');
-            break;
-        case 0x20:
-            ps2kbd_enqueue_ascii(shift_state ? '#' : '3');
-            break;
-        case 0x21:
-            ps2kbd_enqueue_ascii(shift_state ? '$' : '4');
-            break;
-        case 0x22:
-            ps2kbd_enqueue_ascii(shift_state ? '%' : '5');
-            break;
-        case 0x23:
-            ps2kbd_enqueue_ascii(shift_state ? '^' : '6');
-            break;
-        case 0x24:
-            ps2kbd_enqueue_ascii(shift_state ? '&' : '7');
-            break;
-        case 0x25:
-            ps2kbd_enqueue_ascii(shift_state ? '*' : '8');
-            break;
-        case 0x26:
-            ps2kbd_enqueue_ascii(shift_state ? '(' : '9');
-            break;
-        case 0x27:
-            ps2kbd_enqueue_ascii(shift_state ? ')' : '0');
-            break;
-        default:
-            break;
+    if (scan < 0x80) {
+        char ch = 0;
+        for (uint8_t i = 0; i < (sizeof(ps2_key_map) / sizeof(ps2_key_map[0])); ++i) {
+            if (ps2_key_map[i].scan == scan) {
+                ch = (shift_state ^ caps_state) ? ps2_key_map[i].shifted : ps2_key_map[i].normal;
+                break;
+            }
+        }
+
+        if (ch != 0) {
+            ps2kbd_enqueue_ascii(ch);
+        }
     }
 }
 
