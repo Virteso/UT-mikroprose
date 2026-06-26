@@ -2,16 +2,16 @@
 #include <util/delay.h>
 #include "lcd.h"
 
-#define LCD_RS PORTE1
+#define LCD_RS PORTD7
 #define LCD_RW PORTD6
-#define LCD_E  PORTD7
+#define LCD_E  PORTE0
 
-#define CTRL_DDR  DDRE
-#define CTRL_PORT PORTE
+#define CTRL_DDR  DDRD
+#define CTRL_PORT PORTD
 #define RW_DDR    DDRD
 #define RW_PORT   PORTD
-#define E_DDR     DDRD
-#define E_PORT    PORTD
+#define E_DDR     DDRE
+#define E_PORT    PORTE
 
 #define DATA_PORT PORTC
 #define DATA_DDR  DDRC
