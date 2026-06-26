@@ -2,7 +2,7 @@
 #include <util/delay.h>
 #include "lcd.h"
 
-#define LCD_RS PORTE0
+#define LCD_RS PORTE1
 #define LCD_RW PORTD6
 #define LCD_E  PORTD7
 
@@ -39,6 +39,7 @@ static void lcd_busy_wait(void) {
         _delay_us(1);
     }
     E_PORT &= ~(1 << LCD_E);
+    RW_PORT &= ~(1 << LCD_RW);
     DATA_DDR = 0xFF;
 }
 
