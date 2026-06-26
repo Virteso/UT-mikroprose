@@ -1,11 +1,7 @@
 #include <avr/io.h>
 #include <stdint.h>
-
-#ifndef F_CPU
-#define F_CPU 2000000
-#endif
-#include <util/delay.h>
 #include "lcd.h"
+#include <util/delay.h>
 
 #define LCD_RS PD7
 #define LCD_RW PD6
@@ -75,7 +71,11 @@ void lcd_init(void) {
 	RW_DDR  |= (1 << LCD_RW);
 	E_DDR   |= (1 << LCD_E);
 
-	lcd_write_cmd((1 << PC5) | (1 << PC4) | (1 << PC3)); // Function set: 8-bit, 2 lines, 5x8 font
+	lcd_write_cmd((1 << PC5)	| (1 << PC4) | (1 << PC3));		// Function set: 8-bit, 2 lines, 5x8 font
+	lcd_write_cmd((1 << PC3)	| (1 << PC2));					// Display on
+	lcd_write_cmd((1 << PC2)	| (1 << PC1));					// Increment and no shift
+
+
 	lcd_clear();
 }
 
