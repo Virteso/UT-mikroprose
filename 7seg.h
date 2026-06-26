@@ -8,7 +8,7 @@ extern volatile uint8_t SEG_digits[2];
 extern volatile uint8_t current_digit;
 
 void shiftByteOut(uint8_t data);
-void SEGinitTimer(void);
+void SEGinitTimer1(void);
 void SEGinitIO(void);
 
 #endif

@@ -58,7 +58,7 @@ void SEGinitIO(){
     DDRD |= (1 << PD4);
 }
 
-void SEGinitTimer(){
+void SEGinitTimer1(){
     TCNT1 = 0;
     OCR1A = 2000000 / (8 * 500);
     TIMSK1 = (1 << OCIE1A);
