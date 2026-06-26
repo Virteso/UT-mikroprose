@@ -16,7 +16,7 @@ const uint8_t segment_map[] = {
 	0	// Clear
 };
 volatile uint8_t SEG_digits[2] = {10, 10};
-volatile uint8_t current_digit = 0;
+uint8_t current_digit = 0;
 
 void shiftByteOut(uint8_t data) {
 	PORTE &= ~(1 << PE4);
@@ -24,7 +24,7 @@ void shiftByteOut(uint8_t data) {
 	PORTE |= (1 << PE3);
 	PORTE &= ~(1 << PE3);
 
-	for (int i = 0; i < 7; i++, data >>= 1) {
+	for (uint8_t i = 0; i < 7; i++, data >>= 1) {
 		if (data & 1) {
 			PORTE |= (1 << PE4);
 		} else {
