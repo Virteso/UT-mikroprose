@@ -1,13 +1,15 @@
 #include <avr/io.h>
+#include <stdint.h>
 #include <util/delay.h>
 #include "lcd.h"
 
-#define LCD_RS PORTD7
-#define LCD_RW PORTD6
-#define LCD_E  PORTE0
+#define LCD_RS PD7
+#define LCD_RW PD6
+#define LCD_E  PE0
+#define BUSY_FLAG (1 << PC0)
 
-#define CTRL_DDR  DDRD
-#define CTRL_PORT PORTD
+#define RS_DDR  DDRD
+#define RS_PORT PORTD
 #define RW_DDR    DDRD
 #define RW_PORT   PORTD
 #define E_DDR     DDRE
@@ -19,62 +21,56 @@
 
 volatile char lcd_buffer[LCD_ROWS][LCD_COLS];
 
+static uint8_t lcd_reverse_bits(uint8_t b) {
+    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+    return b;
+}
+
 static void lcd_pulse(void) {
     E_PORT |= (1 << LCD_E);
-    _delay_us(1);
+    _delay_us(1); // ? vb pole vaja
     E_PORT &= ~(1 << LCD_E);
-    _delay_us(50);
+    _delay_us(40);
 }
 
 static void lcd_busy_wait(void) {
-    DATA_DDR &= 0x00;
-    CTRL_PORT &= ~(1 << LCD_RS);
+    RS_PORT &= ~(1 << LCD_RS);
     RW_PORT |= (1 << LCD_RW);
-    E_PORT |= (1 << LCD_E);
-    _delay_us(1);
-    while (DATA_PIN & 0x80) {
+    uint8_t busy = 1;
+    while (busy) {
         E_PORT |= (1 << LCD_E);
-        _delay_us(1);
+        busy = DATA_PIN & BUSY_FLAG;
         E_PORT &= ~(1 << LCD_E);
-        _delay_us(1);
+        _delay_us(80);
     }
-    E_PORT &= ~(1 << LCD_E);
-    RW_PORT &= ~(1 << LCD_RW);
-    DATA_DDR = 0xFF;
 }
 
 void lcd_write_cmd(uint8_t cmd) {
     lcd_busy_wait();
-    CTRL_PORT &= ~(1 << LCD_RS);
+    RS_PORT &= ~(1 << LCD_RS);
     RW_PORT &= ~(1 << LCD_RW);
-    DATA_PORT = cmd;
+    DATA_PORT = lcd_reverse_bits(cmd);
     lcd_pulse();
 }
 
 void lcd_write_data(uint8_t data) {
     lcd_busy_wait();
-    CTRL_PORT |= (1 << LCD_RS);
+    RS_PORT |= (1 << LCD_RS);
     RW_PORT &= ~(1 << LCD_RW);
-    DATA_PORT = data;
+    DATA_PORT = lcd_reverse_bits(data);
     lcd_pulse();
 }
 
 void lcd_init(void) {
-    _delay_ms(50);
+    _delay_ms(40);
     DATA_DDR = 0xFF;
-    CTRL_DDR |= (1 << LCD_RS);
-    E_DDR   |= (1 << LCD_E);
+    RS_DDR |= (1 << LCD_RS);
     RW_DDR  |= (1 << LCD_RW);
+    E_DDR   |= (1 << LCD_E);
 
-    CTRL_PORT &= ~(1 << LCD_RS);
-    RW_PORT   &= ~(1 << LCD_RW);
-
-    lcd_write_cmd(0x38);
-    lcd_write_cmd(0x0E);
-    lcd_write_cmd(0x06);
-    lcd_write_cmd(0x01);
-    _delay_ms(2);
-
+    lcd_write_cmd((1 << PC5) | (1 << PC4) | (1 << PC3)); // Function set: 8-bit, 2 lines, 5x8 font
     lcd_clear();
 }
 
@@ -87,7 +83,7 @@ void lcd_clear(void) {
 }
 
 void lcd_set_cursor(uint8_t col, uint8_t row) {
-    uint8_t addr[] = {0x00, 0x40};
+    const uint8_t addr[] = {0x00, 0x40};
     lcd_write_cmd(0x80 | (addr[row] + col));
 }
 

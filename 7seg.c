@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <stdint.h>
 #include "7seg.h"
 
 const uint8_t segment_map[] = {
