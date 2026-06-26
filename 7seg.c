@@ -44,10 +44,10 @@ ISR(TIMER1_COMPA_vect) {
     current_digit ^= 1;
 
     if (current_digit == 0) {
-        shiftByteOut(segment_map[digits[0]]);
+        shiftByteOut(segment_map[SEG_digits[0]]);
         PORTD |= (1 << PD4);
     } else {
-        shiftByteOut(segment_map[digits[1]]);
+        shiftByteOut(segment_map[SEG_digits[1]]);
         PORTD &= ~(1 << PD4);
     }
 }
@@ -64,4 +64,9 @@ void SEGinitTimer1(){
     TIMSK1 = (1 << OCIE1A);
     TCCR1A = (0b11 << WGM10);
     TCCR1B = (1 << WGM13) | (1 << WGM12) | (1 << CS11);
+}
+
+void SEGinit(){
+    SEGinitIO();
+    SEGinitTimer1();
 }
